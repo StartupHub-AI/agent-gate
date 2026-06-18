@@ -16,6 +16,24 @@ straight through, so nothing you already serve breaks.
 
 ## The decision
 
+```mermaid
+flowchart TD
+    R["request → /api/v1/..."] --> B{"has Authorization: Bearer?"}
+    B -->|"yes (existing API customer)"| PASS["pass through · never gated"]
+    B -->|no| S{"valid wallet signature?<br/>(EIP-191, recovered)"}
+    S -->|no| Q1["402 · sign to prove a funded wallet"]
+    S -->|yes| F{"USDC ≥ $100 AND tx count ≥ 3?"}
+    F -->|"under-funded / freshly minted"| Q2["402 · come back funded"]
+    F -->|"proven + funded + active"| OK["200 · origin + X-Agent-Qualified + free credits"]
+
+    classDef pass fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef deny fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+    class PASS,OK pass;
+    class Q1,Q2 deny;
+```
+
+<details><summary>same logic, in one glance</summary>
+
 ```
 request to /api/v1/...
    ├─ has Authorization: Bearer (existing API customer) → pass through, never gated
@@ -24,6 +42,7 @@ request to /api/v1/...
    ├─ tx count < 3 (freshly minted) .................. 402  "no qualifying history"
    └─ proven + funded + active ...................... 200  origin + X-Agent-Qualified, free credits
 ```
+</details>
 
 ## How an agent proves its wallet (EIP-191, not a trusted header)
 
@@ -43,6 +62,25 @@ headers:  X-Agent-Wallet: 0x...
 
 The proof is bound to the wallet + path + a 5-minute freshness window, so a captured
 signature can't be replayed on another path or after it expires.
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant Gate as Agent Gate (Worker)
+    participant Base as Base (USDC + nonce)
+    participant Origin
+
+    Agent->>Gate: GET /api/v1/...<br/>X-Agent-Wallet / Signature / Issued
+    Gate->>Gate: recover address from EIP-191 signature<br/>(bound to wallet + path + 5-min window)
+    Gate->>Base: balanceOf(wallet) + transaction count
+    Base-->>Gate: balance, nonce
+    alt funded ≥ $100 USDC and active
+        Gate->>Origin: forward (X-Agent-Qualified)
+        Origin-->>Agent: 200 + data + free credits
+    else no proof / under-funded
+        Gate-->>Agent: 402 + funding challenge (x402 menu)
+    end
+```
 
 ## Run + test locally
 
@@ -101,6 +139,14 @@ A qualified agent gets handed the **x402 menu**: priced endpoints return `402` w
 mesh menu, settling in USDC on Base. The gate is the front door + free sample; x402 is the
 settlement + referral layer behind it. See
 [x402-mesh](https://github.com/StartupHub-AI/x402-mesh).
+
+```mermaid
+flowchart LR
+    A["Agent"] --> G["Agent Gate<br/>front door + free sample"]
+    G -->|qualified| X["x402 menu<br/>priced endpoints"]
+    X --> S["settlement<br/>USDC on Base"]
+    S --> R["referral commission<br/>(x402-mesh)"]
+```
 
 ## License
 
