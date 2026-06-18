@@ -1,0 +1,34 @@
+name = "agent-gate"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+# All vars are optional; the defaults in src/index.ts make the worker run as-is.
+[vars]
+USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" # Base mainnet USDC
+MIN_USDC = "100"            # qualify threshold, dollars
+MIN_NONCE = "3"             # activity floor (anti freshly-minted-bypass)
+GATED_PREFIX = "/api/v1/"   # only this surface is gated; everything else passes through
+ORIGIN_URL = "https://example.com"   # your origin
+# Intent layer: aligned-spend scoring against an agent-commerce payee allowlist.
+# Seed it with your x402 receiving wallet, then grow it with facilitators / known
+# agent-API payment contracts. INTENT_MIN=0 = score only (don't hard-gate on intent).
+KNOWN_PAYEES = "0x0000000000000000000000000000000000000000"
+INTENT_MIN = "0"
+
+# BASE_RPC_URL is a SECRET (keep keyed RPC URLs out of the repo):
+#   echo "https://base-mainnet.g.alchemy.com/v2/<KEY>" | wrangler secret put BASE_RPC_URL
+# It must be a getLogs-capable Base Mainnet endpoint (Alchemy/QuickNode) because the
+# intent scan uses alchemy_getAssetTransfers. If unset, the worker falls back to the
+# rate-limited public https://mainnet.base.org (balance/nonce work; intent scan won't).
+
+# Optional per-wallet verdict cache (one KV read instead of two RPC calls on a repeat):
+#   wrangler kv:namespace create AGENT_GATE_KV
+# [[kv_namespaces]]
+# binding = "AGENT_GATE_KV"
+# id = "<kv-namespace-id>"
+
+# Go live in front of ONE endpoint first, watch it, then widen to /api/v1/*.
+# Uncomment and set to your own zone after `wrangler deploy` succeeds:
+# [[routes]]
+# pattern = "your-domain.com/api/v1/startups*"
+# zone_name = "your-domain.com"

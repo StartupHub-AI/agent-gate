@@ -1,0 +1,29 @@
+{
+  "name": "agent-gate",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A Cloudflare Worker that gates an API on economics, not identity: prove a funded agent wallet on Base or get a 402. Composes with x402.",
+  "license": "MIT",
+  "repository": "github:StartupHub-AI/agent-gate",
+  "keywords": [
+    "cloudflare-workers",
+    "x402",
+    "agentic-commerce",
+    "ai-agents",
+    "base",
+    "usdc",
+    "api-gateway",
+    "eip-191"
+  ],
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test:sign": "node test/sign-verify.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}
