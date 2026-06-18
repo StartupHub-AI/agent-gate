@@ -1,5 +1,7 @@
 # Agent Gate
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/StartupHub-AI/agent-gate)
+
 A Cloudflare Worker that gates your data/API surface on **economics, not identity**.
 Before the origin is touched it proves the caller controls a funded wallet, reads its
 on-chain USDC balance + activity on Base, and either welcomes a qualified agent buyer
@@ -105,8 +107,14 @@ active, qualified, reason) so you can tune `MIN_USDC` / `MIN_NONCE` against real
 
 ## Deploy (your Cloudflare account)
 
-It's deploy-safe: signature-proven wallets + API-key passthrough mean existing paying
-customers are never blocked.
+**One click:** the [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/StartupHub-AI/agent-gate)
+button (also at the top) forks this repo to your GitHub and deploys the Worker to your
+account on its `*.workers.dev` URL, no terminal. It runs with safe defaults (public Base
+RPC fallback, no route bound, so it gates nothing until you say so). Then add your own
+route + the optional `BASE_RPC_URL` secret below.
+
+Or from the CLI, it's deploy-safe (signature-proven wallets + API-key passthrough mean
+existing paying customers are never blocked):
 
 ```bash
 npx wrangler deploy            # ships to <name>.<subdomain>.workers.dev
