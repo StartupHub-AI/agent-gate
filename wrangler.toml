@@ -14,6 +14,13 @@ ORIGIN_URL = "https://example.com"   # your origin
 # agent-API payment contracts. INTENT_MIN=0 = score only (don't hard-gate on intent).
 KNOWN_PAYEES = "0x0000000000000000000000000000000000000000"
 INTENT_MIN = "0"
+# Standard x402 pay-per-call option advertised in the 402 `accepts` block, so a plain
+# x402 client / Cloudflare's Monetization Gateway can pay without knowing this gate.
+# Set X402_PAY_TO to YOUR receiving wallet to enable it; left unset, the 402 still works
+# (prove-a-funded-wallet path) but advertises no direct-pay option.
+# X402_PAY_TO = "0xYourReceivingWalletOnBase"
+X402_PRICE = "0.01"          # dollars per call
+X402_NETWORK = "base"
 
 # BASE_RPC_URL is a SECRET (keep keyed RPC URLs out of the repo):
 #   echo "https://base-mainnet.g.alchemy.com/v2/<KEY>" | wrangler secret put BASE_RPC_URL
