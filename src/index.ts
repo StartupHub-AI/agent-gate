@@ -329,8 +329,17 @@ export default {
     }
     if (!verdict.qualified) return challenge(env, req.url, { verdict });
 
-    // Qualified buyer: serve origin, tag the request, surface the grant.
-    const res = await fetch(new Request(origin(url.pathname + url.search), req));
+    // Qualified buyer. Stamp the buyer signal on the REQUEST forwarded downstream, so
+    // the origin, a chained Worker, or a payment rule (e.g. an x402 / Monetization
+    // Gateway rule) can price against the tier before it ever runs. Also echo it on the
+    // response for the calling agent.
+    const originReq = new Request(origin(url.pathname + url.search), req);
+    originReq.headers.set('x-agent-qualified', 'true');
+    originReq.headers.set('x-agent-wallet', wallet);
+    originReq.headers.set('x-agent-wallet-type', verdict.wallet_type);
+    originReq.headers.set('x-agent-tier', verdict.tier);
+    originReq.headers.set('x-agent-intent-score', String(verdict.intent_score));
+    const res = await fetch(originReq);
     const out = new Response(res.body, res);
     out.headers.set('x-agent-qualified', 'true');
     out.headers.set('x-agent-wallet', wallet);

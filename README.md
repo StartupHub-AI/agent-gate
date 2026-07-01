@@ -176,12 +176,25 @@ settles the call. Because the `402` is spec-compliant x402, either rail works:
 
 Either way the gate stays in one lane: decide who the buyer is and what they're worth.
 
+**How the tier reaches the rail (pre-GA sketch):** on a qualified request the gate stamps
+the buyer signal onto the REQUEST it forwards downstream (`X-Agent-Tier`,
+`X-Agent-Qualified`, `X-Agent-Wallet-Type`, `X-Agent-Intent-Score`), so a chained Worker
+or a payment rule can price against it before the origin runs:
+
+```
+agent → [Agent Gate]  --X-Agent-Tier: priority-->  [x402 / Gateway rule]  → origin
+              underwrite: who + how much                 settle: price by tier
+```
+
+The header the gate emits is real today. The Monetization Gateway's rule layer is pre-GA,
+so treat the second hop as the intended shape, not a verified integration.
+
 ```mermaid
 flowchart LR
-    A["Agent"] --> G["Agent Gate<br/>front door + free sample"]
-    G -->|qualified| X["x402 menu<br/>priced endpoints"]
+    A["Agent"] --> G["Agent Gate<br/>underwrite: funds + intent → tier"]
+    G -->|"X-Agent-Tier"| X["x402 / Gateway rule<br/>settle: price by tier"]
     X --> S["settlement<br/>USDC on Base"]
-    S --> R["referral commission<br/>(x402-mesh)"]
+    S --> R["origin / referral<br/>(x402-mesh)"]
 ```
 
 ## License
